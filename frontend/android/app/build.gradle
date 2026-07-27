@@ -1,0 +1,29 @@
+android {
+    defaultConfig {
+        applicationId "com.clinic.management"
+        minSdkVersion 21
+        targetSdkVersion 33
+        versionCode 1
+        versionName "1.0.0"
+    }
+
+    buildTypes {
+        release {
+            signingConfig signingConfigs.debug
+        }
+    }
+
+    flavorDimensions "default"
+    productFlavors {
+        web {
+            dimension "default"
+            applicationIdSuffix ".web"
+            versionNameSuffix "-web"
+        }
+        mobile {
+            dimension "default"
+            applicationIdSuffix ".mobile"
+            versionNameSuffix "-mobile"
+        }
+    }
+}
