@@ -1,4 +1,4 @@
-FROM php:8.1-fpm-alpine
+FROM php:8.2-fpm-alpine
 
 # Install dependencies
 RUN apk add --no-cache \
@@ -21,7 +21,7 @@ RUN docker-php-ext-install \
     apk del $PHPIZE_DEPS
 
 # Install Composer
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 # Set working directory
 WORKDIR /var/www/html
@@ -29,7 +29,7 @@ WORKDIR /var/www/html
 # Copy application files
 COPY . /var/www/html
 
-# Install dependencies (skip for now, will install when composer.lock exists)
+# Install dependencies (will run manually in container)
 # RUN composer install --no-dev --optimize-autoloader
 
 # Set permissions

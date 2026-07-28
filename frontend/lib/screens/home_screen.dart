@@ -1,44 +1,7 @@
 import 'package:flutter/material.dart';
-import '../services/api_client.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
-
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  final ApiClient _apiClient = ApiClient();
-  Map<String, dynamic>? _healthData;
-  bool _isLoading = true;
-  String? _error;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadHealth();
-  }
-
-  Future<void> _loadHealth() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-
-    try {
-      final data = await _apiClient.getHealth();
-      setState(() {
-        _healthData = data;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _isLoading = false;
-      });
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,56 +9,145 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('Clinic Management System'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () {
+              Navigator.pushReplacementNamed(context, '/');
+            },
+          ),
+        ],
       ),
-      body: Center(
-        child: _isLoading
-            ? const CircularProgressIndicator()
-            : _error != null
-                ? Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Error: $_error',
-                        style: const TextStyle(color: Colors.red),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _loadHealth,
-                        child: const Text('Retry'),
-                      ),
-                    ],
-                  )
-                : Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.check_circle,
-                        color: Colors.green,
-                        size: 64,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Status: ${_healthData?['status'] ?? 'Unknown'}',
-                        style: const TextStyle(fontSize: 20),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        _healthData?['message'] ?? 'No message',
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'API Base URL: ${ApiClient.baseUrl}',
-                        style: const TextStyle(fontSize: 12, color: Colors.grey),
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _loadHealth,
-                        child: const Text('Refresh'),
-                      ),
-                    ],
-                  ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: GridView.count(
+          crossAxisCount: 2,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          children: [
+            _buildDashboardCard(
+              context,
+              icon: Icons.people,
+              title: 'Patients',
+              color: Colors.blue,
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Patients module coming soon')),
+                );
+              },
+            ),
+            _buildDashboardCard(
+              context,
+              icon: Icons.local_hospital,
+              title: 'Visits',
+              color: Colors.green,
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Visits module coming soon')),
+                );
+              },
+            ),
+            _buildDashboardCard(
+              context,
+              icon: Icons.medical_services,
+              title: 'Clinical',
+              color: Colors.purple,
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Clinical module coming soon')),
+                );
+              },
+            ),
+            _buildDashboardCard(
+              context,
+              icon: Icons.medication,
+              title: 'Pharmacy',
+              color: Colors.orange,
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Pharmacy module coming soon')),
+                );
+              },
+            ),
+            _buildDashboardCard(
+              context,
+              icon: Icons.bed,
+              title: 'Admissions',
+              color: Colors.teal,
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Admissions module coming soon')),
+                );
+              },
+            ),
+            _buildDashboardCard(
+              context,
+              icon: Icons.science,
+              title: 'Lab',
+              color: Colors.red,
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Lab module coming soon')),
+                );
+              },
+            ),
+            _buildDashboardCard(
+              context,
+              icon: Icons.receipt,
+              title: 'Billing',
+              color: Colors.amber,
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Billing module coming soon')),
+                );
+              },
+            ),
+            _buildDashboardCard(
+              context,
+              icon: Icons.bar_chart,
+              title: 'Reports',
+              color: Colors.indigo,
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Reports module coming soon')),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDashboardCard(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Card(
+      elevation: 4,
+      child: InkWell(
+        onTap: onTap,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 48,
+              color: color,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
