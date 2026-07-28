@@ -31,9 +31,7 @@ class HomeScreen extends StatelessWidget {
               title: 'Patients',
               color: Colors.blue,
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Patients module coming soon')),
-                );
+                Navigator.pushNamed(context, '/find-patient');
               },
             ),
             _buildDashboardCard(
