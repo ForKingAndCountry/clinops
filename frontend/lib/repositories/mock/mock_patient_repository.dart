@@ -403,6 +403,28 @@ class MockPatientRepository implements PatientRepository {
         return true;
       }
       
+      // Search by DOB + Community (format: "YYYY-MM-DD community" or "community YYYY-MM-DD")
+      final parts = normalizedQuery.split(RegExp(r'\s+'));
+      if (parts.length >= 2) {
+        bool dobMatch = false;
+        bool communityMatch = false;
+        
+        for (final part in parts) {
+          // Check if this part looks like a date (YYYY-MM-DD format)
+          if (RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(part)) {
+            if (dobString == part) {
+              dobMatch = true;
+            }
+          } else if (patient.community != null && patient.community!.toLowerCase().contains(part)) {
+            communityMatch = true;
+          }
+        }
+        
+        if (dobMatch && communityMatch) {
+          return true;
+        }
+      }
+      
       return false;
     }).toList();
 
@@ -459,8 +481,8 @@ class MockPatientRepository implements PatientRepository {
     final visits = _patientVisits[patientId] ?? [];
 
     return {
-      'patient': patient,
-      'visits': visits,
+      'patient': patient.toJson(),
+      'visits': visits.map((v) => v.toJson()).toList(),
     };
   }
 

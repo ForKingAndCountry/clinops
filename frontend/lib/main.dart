@@ -5,6 +5,7 @@ import 'screens/patient_registration_screen.dart';
 import 'screens/find_patient_screen.dart';
 import 'screens/patient_chart_screen.dart';
 import 'services/service_locator.dart';
+import 'theme/clinops_theme.dart';
 
 void main() {
   setupServiceLocator();
@@ -17,11 +18,9 @@ class ClinicApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Clinic Management System',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        useMaterial3: true,
-      ),
+      title: 'ClinOps',
+      debugShowCheckedModeBanner: false,
+      theme: ClinOpsTheme.lightTheme,
       initialRoute: '/login',
       routes: {
         '/login': (context) => const LoginScreen(),

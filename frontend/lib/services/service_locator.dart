@@ -32,14 +32,15 @@ void setupServiceLocator() {
     () => MockAuthRepository(),
   );
 
-  // Register mock patient repository
-  getIt.registerLazySingleton<PatientRepository>(
-    () => MockPatientRepository(),
+  // Register mock patient repository (eager to ensure it's available for VisitRepository)
+  getIt.registerSingleton<PatientRepository>(
+    MockPatientRepository(),
   );
 
   // Register mock visit repository (depends on patient repository)
-  getIt.registerLazySingleton<VisitRepository>(
-    () => MockVisitRepository(getIt<PatientRepository>() as MockPatientRepository),
+  // Use registerSingleton to ensure it's instantiated and populates patient visits immediately
+  getIt.registerSingleton<VisitRepository>(
+    MockVisitRepository(getIt<PatientRepository>() as MockPatientRepository),
   );
 
   // Register mock clinical repository

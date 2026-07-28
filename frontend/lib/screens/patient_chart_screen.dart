@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../services/service_locator.dart';
 import '../repositories/patient_repository.dart';
 import '../models/patient.dart';
 import '../models/visit.dart';
 import '../widgets/shared_widgets.dart';
+import '../theme/clinops_theme.dart';
 
 class PatientChartScreen extends StatefulWidget {
   const PatientChartScreen({super.key});
@@ -20,20 +22,30 @@ class _PatientChartScreenState extends State<PatientChartScreen> {
   List<Visit> _visits = [];
   bool _isLoading = true;
   String? _errorMessage;
+  int? _patientId;
 
   @override
   void initState() {
     super.initState();
-    _loadPatientChart();
   }
 
-  Future<void> _loadPatientChart() async {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Get navigation arguments safely in didChangeDependencies
     final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
     final patientId = args?['patientId'] as int?;
     
-    if (patientId == null) {
+    if (patientId != null && _patientId == null) {
+      _patientId = patientId;
+      _loadPatientChart();
+    }
+  }
+
+  Future<void> _loadPatientChart() async {
+    if (_patientId == null) {
       setState(() {
-        _errorMessage = 'Patient ID not provided';
+        _errorMessage = 'Patient ID not provided. Please navigate from the Find Patient screen.';
         _isLoading = false;
       });
       return;
@@ -45,7 +57,14 @@ class _PatientChartScreenState extends State<PatientChartScreen> {
     });
 
     try {
-      final chart = await _patientRepository.getChart(patientId);
+      final chart = await _patientRepository.getChart(_patientId!).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          throw Exception('Request timed out after 10 seconds');
+        },
+      );
+      
+      if (!mounted) return;
       
       setState(() {
         _patient = Patient.fromJson(chart['patient']);
@@ -55,8 +74,10 @@ class _PatientChartScreenState extends State<PatientChartScreen> {
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
+      
       setState(() {
-        _errorMessage = e.toString();
+        _errorMessage = 'Error: ${e.toString()}';
         _isLoading = false;
       });
     }
@@ -65,12 +86,12 @@ class _PatientChartScreenState extends State<PatientChartScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: ClinOpsTheme.background,
       appBar: AppBar(
         title: const Text('Patient Chart'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh_outlined),
             onPressed: _loadPatientChart,
             tooltip: 'Refresh',
           ),
@@ -83,14 +104,21 @@ class _PatientChartScreenState extends State<PatientChartScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.error_outline, size: 64, color: Colors.red),
-                      const SizedBox(height: 16),
+                      Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: ClinOpsTheme.danger,
+                      ),
+                      const SizedBox(height: ClinOpsTheme.space3),
                       Text(
                         'Error: $_errorMessage',
-                        style: const TextStyle(color: Colors.red),
+                        style: GoogleFonts.inter(
+                          color: ClinOpsTheme.danger,
+                          fontSize: 16,
+                        ),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: ClinOpsTheme.space3),
                       ElevatedButton(
                         onPressed: _loadPatientChart,
                         child: const Text('Retry'),
@@ -111,17 +139,17 @@ class _PatientChartScreenState extends State<PatientChartScreen> {
     }
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(ClinOpsTheme.space3),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Patient Header
           _buildPatientHeader(),
-          const SizedBox(height: 24),
+          const SizedBox(height: ClinOpsTheme.space4),
 
           // Patient Details
           _buildPatientDetails(),
-          const SizedBox(height: 24),
+          const SizedBox(height: ClinOpsTheme.space4),
 
           // Visit History
           _buildVisitHistory(),
@@ -132,50 +160,47 @@ class _PatientChartScreenState extends State<PatientChartScreen> {
 
   Widget _buildPatientHeader() {
     return Card(
-      elevation: 4,
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(ClinOpsTheme.space3),
         child: Row(
           children: [
             CircleAvatar(
               radius: 32,
-              backgroundColor: Theme.of(context).colorScheme.primary,
+              backgroundColor: ClinOpsTheme.primary,
               child: Text(
                 _patient!.fullName.isNotEmpty 
                     ? _patient!.fullName[0].toUpperCase() 
                     : '?',
-                style: const TextStyle(
-                  color: Colors.white,
+                style: GoogleFonts.spaceGrotesk(
+                  color: ClinOpsTheme.surface,
                   fontSize: 24,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: ClinOpsTheme.space3),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     _patient!.fullName,
-                    style: const TextStyle(
+                    style: GoogleFonts.spaceGrotesk(
                       fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
+                      color: ClinOpsTheme.ink,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'ID: ${_patient!.hospitalId}',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                    ),
+                    style: context.monoSmallStyle,
                   ),
                 ],
               ),
             ),
             IconButton(
-              icon: const Icon(Icons.print),
+              icon: const Icon(Icons.print_outlined),
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Print feature coming soon')),
@@ -191,33 +216,33 @@ class _PatientChartScreenState extends State<PatientChartScreen> {
 
   Widget _buildPatientDetails() {
     return Card(
-      elevation: 2,
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(ClinOpsTheme.space3),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Patient Information',
-              style: TextStyle(
+              style: GoogleFonts.spaceGrotesk(
                 fontSize: 18,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
+                color: ClinOpsTheme.ink,
               ),
             ),
-            const SizedBox(height: 16),
-            _buildDetailRow(Icons.cake, 'Date of Birth', 
+            const SizedBox(height: ClinOpsTheme.space3),
+            _buildDetailRow(Icons.cake_outlined, 'Date of Birth', 
                 DateFormat('dd MMM yyyy').format(_patient!.dateOfBirth)),
             if (_patient!.phone != null)
-              _buildDetailRow(Icons.phone, 'Phone', _patient!.phone!),
+              _buildDetailRow(Icons.phone_outlined, 'Phone', _patient!.phone!),
             if (_patient!.community != null)
-              _buildDetailRow(Icons.location_on, 'Community', _patient!.community!),
+              _buildDetailRow(Icons.location_on_outlined, 'Community', _patient!.community!),
             if (_patient!.address != null)
-              _buildDetailRow(Icons.home, 'Address', _patient!.address!),
+              _buildDetailRow(Icons.home_outlined, 'Address', _patient!.address!),
             if (_patient!.emergencyContactName != null)
-              _buildDetailRow(Icons.contact_phone, 'Emergency Contact', 
+              _buildDetailRow(Icons.contact_phone_outlined, 'Emergency Contact', 
                   '${_patient!.emergencyContactName}${_patient!.emergencyContactPhone != null ? " (${_patient!.emergencyContactPhone})" : ""}'),
             if (_patient!.allergies != null && _patient!.allergies!.isNotEmpty)
-              _buildDetailRow(Icons.warning, 'Allergies', _patient!.allergies!, 
+              _buildDetailRow(Icons.warning_amber_outlined, 'Allergies', _patient!.allergies!, 
                   isWarning: true),
           ],
         ),
@@ -227,29 +252,33 @@ class _PatientChartScreenState extends State<PatientChartScreen> {
 
   Widget _buildDetailRow(IconData icon, String label, String value, {bool isWarning = false}) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
+      padding: const EdgeInsets.only(bottom: ClinOpsTheme.space2),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 20, color: isWarning ? Colors.orange : Colors.grey[600]),
-          const SizedBox(width: 12),
+          Icon(
+            icon,
+            size: 20,
+            color: isWarning ? ClinOpsTheme.warning : ClinOpsTheme.muted,
+          ),
+          const SizedBox(width: ClinOpsTheme.space2),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   label,
-                  style: TextStyle(
+                  style: GoogleFonts.inter(
                     fontSize: 12,
-                    color: Colors.grey[600],
+                    color: ClinOpsTheme.muted,
                   ),
                 ),
                 Text(
                   value,
-                  style: TextStyle(
+                  style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: isWarning ? Colors.orange : Colors.black87,
+                    color: isWarning ? ClinOpsTheme.warning : ClinOpsTheme.ink,
                   ),
                 ),
               ],
@@ -267,22 +296,28 @@ class _PatientChartScreenState extends State<PatientChartScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            Text(
               'Visit History',
-              style: TextStyle(
+              style: GoogleFonts.spaceGrotesk(
                 fontSize: 18,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
+                color: ClinOpsTheme.ink,
               ),
             ),
             if (_visits.isNotEmpty)
-              Text('${_visits.length} visit(s)', 
-                  style: TextStyle(color: Colors.grey[600])),
+              Text(
+                '${_visits.length} visit(s)', 
+                style: GoogleFonts.inter(
+                  color: ClinOpsTheme.muted,
+                  fontSize: 14,
+                ),
+              ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: ClinOpsTheme.space3),
         if (_visits.isEmpty)
           EmptyState(
-            icon: Icons.history,
+            icon: Icons.history_outlined,
             title: 'No Visits Yet',
             subtitle: 'This patient has no recorded visits.',
             action: ElevatedButton.icon(
@@ -300,7 +335,7 @@ class _PatientChartScreenState extends State<PatientChartScreen> {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _visits.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 12),
+            separatorBuilder: (context, index) => const SizedBox(height: ClinOpsTheme.space2),
             itemBuilder: (context, index) {
               final visit = _visits[index];
               return _buildVisitCard(visit);
@@ -314,9 +349,8 @@ class _PatientChartScreenState extends State<PatientChartScreen> {
     final statusColor = _getStatusColor(visit.status);
     
     return Card(
-      elevation: 2,
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(ClinOpsTheme.space3),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -325,10 +359,7 @@ class _PatientChartScreenState extends State<PatientChartScreen> {
               children: [
                 Text(
                   'Visit #${visit.id}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
+                  style: context.monoStyle,
                 ),
                 StatusBadge(
                   label: _getStatusLabel(visit.status),
@@ -337,17 +368,17 @@ class _PatientChartScreenState extends State<PatientChartScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            _buildVisitDetail(Icons.calendar_today, 
+            const SizedBox(height: ClinOpsTheme.space2),
+            _buildVisitDetail(Icons.calendar_today_outlined, 
                 'Date', DateFormat('dd MMM yyyy, HH:mm').format(visit.createdAt)),
-            _buildVisitDetail(Icons.label, 'Type', visit.visitType),
+            _buildVisitDetail(Icons.label_outlined, 'Type', visit.visitType),
             if (visit.arrivalTime != null)
-              _buildVisitDetail(Icons.access_time, 'Arrival', 
+              _buildVisitDetail(Icons.access_time_outlined, 'Arrival', 
                   DateFormat('dd MMM yyyy, HH:mm').format(visit.arrivalTime!)),
             if (visit.status == VisitStatus.discharged && visit.dischargeTime != null)
-              _buildVisitDetail(Icons.check_circle, 'Discharged', 
+              _buildVisitDetail(Icons.check_circle_outlined, 'Discharged', 
                   DateFormat('dd MMM yyyy, HH:mm').format(visit.dischargeTime!)),
-            const SizedBox(height: 12),
+            const SizedBox(height: ClinOpsTheme.space2),
             Row(
               children: [
                 Expanded(
@@ -357,7 +388,7 @@ class _PatientChartScreenState extends State<PatientChartScreen> {
                         const SnackBar(content: Text('Visit details coming soon')),
                       );
                     },
-                    icon: const Icon(Icons.visibility),
+                    icon: const Icon(Icons.visibility_outlined),
                     label: const Text('View Details'),
                   ),
                 ),
@@ -371,26 +402,26 @@ class _PatientChartScreenState extends State<PatientChartScreen> {
 
   Widget _buildVisitDetail(IconData icon, String label, String value) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
+      padding: const EdgeInsets.only(bottom: ClinOpsTheme.space1),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 16, color: Colors.grey[600]),
-          const SizedBox(width: 8),
+          Icon(icon, size: 16, color: ClinOpsTheme.muted),
+          const SizedBox(width: ClinOpsTheme.space1),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   label,
-                  style: TextStyle(
+                  style: GoogleFonts.inter(
                     fontSize: 11,
-                    color: Colors.grey[600],
+                    color: ClinOpsTheme.muted,
                   ),
                 ),
                 Text(
                   value,
-                  style: const TextStyle(fontSize: 13),
+                  style: GoogleFonts.inter(fontSize: 13),
                 ),
               ],
             ),

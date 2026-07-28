@@ -1,1 +1,1 @@
- C:\\ClinOps\\frontend\\build\\f89b3ee8447c339cc760fd90d5f3f077\\dart_build_result.json: 
+ C:\\ClinOps\\frontend\\build\\f89b3ee8447c339cc760fd90d5f3f077\\dart_build_result.json:  C:\\ClinOps\\frontend\\.dart_tool\\package_config.json C:\\ClinOps\\frontend\\pubspec.yaml C:\\Flutter\\flutter\\bin\\cache\\dart-sdk\\version c:\\clinops\\frontend\\.dart_tool\\package_config.json

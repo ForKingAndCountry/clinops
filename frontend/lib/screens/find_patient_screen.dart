@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../services/service_locator.dart';
 import '../repositories/patient_repository.dart';
 import '../models/patient.dart';
 import '../widgets/shared_widgets.dart';
+import '../theme/clinops_theme.dart';
 
 class FindPatientScreen extends StatefulWidget {
   const FindPatientScreen({super.key});
@@ -69,12 +71,12 @@ class _FindPatientScreenState extends State<FindPatientScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: ClinOpsTheme.background,
       appBar: AppBar(
         title: const Text('Find Patient'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
           IconButton(
-            icon: const Icon(Icons.person_add),
+            icon: const Icon(Icons.person_add_outlined),
             onPressed: () {
               Navigator.pushNamed(context, '/patient-registration');
             },
@@ -85,8 +87,9 @@ class _FindPatientScreenState extends State<FindPatientScreen> {
       body: Column(
         children: [
           // Search Bar
-          Padding(
-            padding: const EdgeInsets.all(16.0),
+          Container(
+            color: ClinOpsTheme.surface,
+            padding: const EdgeInsets.all(ClinOpsTheme.space3),
             child: Row(
               children: [
                 Expanded(
@@ -107,24 +110,21 @@ class _FindPatientScreenState extends State<FindPatientScreen> {
                               },
                             )
                           : null,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
                     ),
                     onSubmitted: (_) => _searchPatients(),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: ClinOpsTheme.space2),
                 ElevatedButton(
                   onPressed: _isSearching ? null : _searchPatients,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                  ),
                   child: _isSearching
                       ? const SizedBox(
                           width: 20,
                           height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
                         )
                       : const Text('Search'),
                 ),
@@ -133,20 +133,62 @@ class _FindPatientScreenState extends State<FindPatientScreen> {
           ),
 
           // Search Tips
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Wrap(
-              spacing: 8,
+          Container(
+            color: ClinOpsTheme.surface,
+            padding: const EdgeInsets.fromLTRB(
+              ClinOpsTheme.space3,
+              0,
+              ClinOpsTheme.space3,
+              ClinOpsTheme.space3,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildSearchTip('Hospital ID'),
-                _buildSearchTip('Name'),
-                _buildSearchTip('Phone'),
-                _buildSearchTip('DOB + Community'),
+                Wrap(
+                  spacing: ClinOpsTheme.space1,
+                  children: [
+                    _buildSearchTip('Hospital ID'),
+                    _buildSearchTip('Name'),
+                    _buildSearchTip('Phone'),
+                    _buildSearchTip('DOB + Community'),
+                  ],
+                ),
+                const SizedBox(height: ClinOpsTheme.space2),
+                Container(
+                  padding: const EdgeInsets.all(ClinOpsTheme.space2),
+                  decoration: BoxDecoration(
+                    color: ClinOpsTheme.info.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(ClinOpsTheme.radius),
+                    border: Border.all(
+                      color: ClinOpsTheme.info,
+                      width: ClinOpsTheme.borderWidth,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        size: 16,
+                        color: ClinOpsTheme.info,
+                      ),
+                      const SizedBox(width: ClinOpsTheme.space1),
+                      Expanded(
+                        child: Text(
+                          'DOB+Community format: YYYY-MM-DD Community (e.g., "1985-03-15 Monrovia")',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            color: ClinOpsTheme.info,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: ClinOpsTheme.space2),
 
           // Results
           Expanded(
@@ -159,8 +201,19 @@ class _FindPatientScreenState extends State<FindPatientScreen> {
 
   Widget _buildSearchTip(String tip) {
     return Chip(
-      label: Text(tip, style: const TextStyle(fontSize: 12)),
-      backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+      label: Text(
+        tip,
+        style: GoogleFonts.inter(fontSize: 12),
+      ),
+      backgroundColor: ClinOpsTheme.primary.withOpacity(0.1),
+      labelStyle: GoogleFonts.inter(
+        fontSize: 12,
+        color: ClinOpsTheme.primary,
+      ),
+      side: BorderSide(
+        color: ClinOpsTheme.primary.withOpacity(0.3),
+        width: ClinOpsTheme.borderWidth,
+      ),
     );
   }
 
@@ -222,7 +275,7 @@ class _FindPatientScreenState extends State<FindPatientScreen> {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: ClinOpsTheme.space3),
       itemCount: _searchResults.length,
       itemBuilder: (context, index) {
         final patient = _searchResults[index];
